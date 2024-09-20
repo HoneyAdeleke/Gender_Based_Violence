@@ -1,0 +1,128 @@
+---
+title: "gbv OL"
+author: "Honey A. Adeleke"
+date: "`r Sys.Date()`"
+output: word_document
+always_allow_html: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Loading Libraries
+
+```{r packages}
+library(readr)
+library(dplyr)
+library(tidytext)
+library(ggplot2)
+library(wordcloud)
+library(wordcloud2)
+library(tm)
+library(syuzhet)
+library(dplyr)
+library(topicmodels)
+library(broom)
+library(tidyverse)
+library(readxl)
+```
+
+```{r Importing_Data, echo=T}
+gbv_OL<- read_excel("Gender Based Violence.xlsx", sheet = "Observation Lagos")
+str(gbv_OL)
+```
+
+```{r Building_Corpus, echo=T}
+corpus = iconv(gbv_OL$Responses, to= "UTF-8")
+corpus1 = Corpus(VectorSource(corpus))
+inspect(corpus1[1:10])
+```
+
+
+```{r Cleaning_the_text, echo=T, warning=FALSE}
+corpus1 <- tm_map(corpus1, stemDocument)  # Stemming the textcorpus2=tm_map(corpus1, tolower) # To make bring document to lower case
+corpus3=tm_map(corpus2, removePunctuation) # To remove punctuation
+corpus4=tm_map(corpus3, removeNumbers) # remove number
+cleanset=tm_map(corpus4, removeWords, stopwords('english')) # To remove English words that are common and will not add much values
+cleanset1=tm_map(cleanset, stripWhitespace) #To get rid of the extra spaces
+inspect(cleanset1[1:10])
+```
+
+
+```{r TDM, echo=T}
+gbv_OL_tdm<-TermDocumentMatrix(cleanset1)
+gbv_OL_tdm1 = as.matrix(gbv_OL_tdm)
+```
+
+
+```{r Bar_plot, echo=T}
+gbv_OL_bar=rowSums(gbv_OL_tdm1) #To find how often each row appears
+gbv_OL_bar1=subset(gbv_OL_bar,gbv_OL_bar>=20) #words with frequency greater than or equal to 5 will appear
+barplot(gbv_OL_bar1,
+        las =2,
+        col = rainbow(7),
+        main= "Frequency of words that appears more than 20 times")
+```
+
+```{r Word_cloud, echo=T}
+gbv_OL_bar2<- sort(rowSums(gbv_OL_tdm1), decreasing = T)
+wordcloud(words = names(gbv_OL_bar2),
+          freq = gbv_OL_bar2,
+          max.words = 1000,
+          random.order = F,
+          min.freq = 2,
+          colors = brewer.pal(7,"Dark2"),
+          scale = c(2,0.1),
+          rot.per = 0.3)
+```
+
+```{r Word_cloud2, echo=T}
+library(wordcloud2)
+gbv_OL_bar3<-data.frame(names(gbv_OL_bar2),gbv_OL_bar2)
+colnames(gbv_OL_bar3)<-c("word", "freq")
+wordcloud2(gbv_OL_bar3,
+           size=0.5,
+           shape="circle")
+
+wordcloud2(gbv_OL_bar3,
+           size=0.2,
+           shape="star",
+           rotateRatio = 0.4,
+           minSize = 1)
+```
+
+```{r Sentiment_Analysis, echo=T}
+library(syuzhet)
+library(dplyr)
+# Read file
+gbv_OL_sentiment <- get_nrc_sentiment(corpus)
+write.csv(gbv_OL_sentiment, "gbv_OL_sentiment.csv")
+head(gbv_OL_sentiment)
+```
+
+```{r Barplot2}
+barplot(colSums(gbv_OL_sentiment),
+        las = 2,
+        col = rainbow(10),
+        ylab = "Frequency",
+        main = "Sentiments of the Observation in Lagos")
+```
+
+
+```{r Topic Modelling, echo=TRUE}
+gbv_OL_dtm <- DocumentTermMatrix(Corpus(VectorSource(cleanset)))
+gbv_OL_lda_model <- LDA(gbv_OL_dtm, k = 5, control = list(seed = 0000))
+gbv_OL_topics <- tidy(gbv_OL_lda_model, matrix = "beta")
+top_terms <- gbv_OL_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  ggplot(aes(x = reorder_within(term, beta, topic), y = beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free_y") +
+  coord_flip() +
+  scale_x_reordered() +
+  labs(title = "Top Terms in Each Topic", x = "Term", y = "Beta")
+```

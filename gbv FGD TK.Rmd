@@ -1,10 +1,8 @@
 ---
-title: "Observation Kebbi"
+title: "FGD TK"
 author: "Honey A. Adeleke"
 date: "`r Sys.Date()`"
 output: html_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 
@@ -27,12 +25,12 @@ library(readxl)
 ```
 
 ```{r Importing_Data, echo=T}
-gbv_OK<- read_excel("Gender Based Violence.xlsx", sheet = "Observation Kebbi")
-str(gbv_OK)
+gbv_FGDTK<- read_excel("Gender Based Violence.xlsx", sheet = "FGD Teacher Kebbi")
+str(gbv_FGDTK)
 ```
 
 ```{r Building_Corpus, echo=T}
-corpus = iconv(gbv_OK$Responses, to= "UTF-8")
+corpus = iconv(gbv_FGDTK$Responses, to=  "UTF-8")
 corpus1 = Corpus(VectorSource(corpus))
 inspect(corpus1[1:10])
 ```
@@ -49,24 +47,23 @@ inspect(cleanset1[1:10])
 
 
 ```{r TDM, echo=T}
-gbv_OK_tdm<-TermDocumentMatrix(cleanset1)
-gbv_OK_tdm1 = as.matrix(gbv_OK_tdm)
+gbv_FGDTK_tdm<-TermDocumentMatrix(cleanset1)
+gbv_FGDTK_tdm1 = as.matrix(gbv_FGDTK_tdm)
 ```
 
 
 ```{r Bar_plot, echo=T}
-gbv_OK_bar=rowSums(gbv_OK_tdm1) #To find how often each row appears
-gbv_OK_bar1=subset(gbv_OK_bar,gbv_OK_bar>=20) #words with frequency greater than or equal to 20 will appear
-barplot(gbv_OK_bar1,
+gbv_FGDTK_bar=rowSums(gbv_FGDTK_tdm1) #To find how often each row appears
+gbv_FGDTK_bar1=subset(gbv_FGDTK_bar,gbv_FGDTK_bar>=20) #words with frequency greater than or equal to 5 will appear
+barplot(gbv_FGDTK_bar1,
         las =2,
-        col = rainbow(7),
-        main= "Frequency of words that appears more than 20 times")
+        col = rainbow(7))
 ```
 
 ```{r Word_cloud, echo=T}
-gbv_OK_bar2<- sort(rowSums(gbv_OK_tdm1), decreasing = T)
-wordcloud(words = names(gbv_OK_bar2),
-          freq = gbv_OK_bar2,
+gbv_FGDTK_bar2<- sort(rowSums(gbv_FGDTK_tdm1), decreasing = T)
+wordcloud(words = names(gbv_FGDTK_bar2),
+          freq = gbv_FGDTK_bar2,
           max.words = 1000,
           random.order = F,
           min.freq = 5,
@@ -77,36 +74,40 @@ wordcloud(words = names(gbv_OK_bar2),
 
 ```{r Word_cloud2, echo=T}
 library(wordcloud2)
-gbv_OK_bar3<-data.frame(names(gbv_OK_bar2),gbv_OK_bar2)
-colnames(gbv_OK_bar3)<-c("word", "freq")
-wordcloud2(gbv_OK_bar3,
-           size=0.5,
-           shape="circle",
+gbv_FGDTK_bar3<-data.frame(names(gbv_FGDTK_bar2),gbv_FGDTK_bar2)
+colnames(gbv_FGDTK_bar3)<-c("word", "freq")
+wordcloud2(gbv_FGDTK_bar3,
+           size=0.2,
+           shape="circle")
+
+wordcloud2(gbv_FGDTK_bar3,
+           size=0.15,
+           shape="star",
            rotateRatio = 0.4,
            minSize = 1)
 ```
 
 ```{r Sentiment_Analysis, echo=T}
 # Read file
-gbv_OK_sentiment <- get_nrc_sentiment(corpus)
-write.csv(gbv_OK_sentiment, "gbv_OK_sentiment.csv")
-head(gbv_OK_sentiment)
+gbv_FGDTK_sentiment <- get_nrc_sentiment(corpus)
+write.csv(gbv_FGDTK_sentiment, "gbv_FGDTK_sentiment.csv")
+head(gbv_FGDTK_sentiment)
 ```
 
 ```{r Barplot2}
-barplot(colSums(gbv_OK_sentiment),
+barplot(colSums(gbv_FGDTK_sentiment),
         las = 2,
         col = rainbow(10),
         ylab = "Frequency",
-        main = "Sentiments of the Observations in Kebbi")
+        main = "sentiments of the gbv_FGDTK")
 ```
 
 
 ```{r Topic Modelling, echo=TRUE}
-gbv_OK_dtm <- DocumentTermMatrix(Corpus(VectorSource(cleanset)))
-gbv_OK_lda_model <- LDA(gbv_OK_dtm, k = 5, control = list(seed = 1234))
-gbv_OK_topics <- tidy(gbv_OK_lda_model, matrix = "beta")
-top_terms <- gbv_OK_topics %>%
+gbv_FGDTK_dtm <- DocumentTermMatrix(Corpus(VectorSource(cleanset)))
+gbv_FGDTK_lda_model <- LDA(gbv_FGDTK_dtm, k = 5, control = list(seed = 1234))
+gbv_FGDTK_topics <- tidy(gbv_FGDTK_lda_model, matrix = "beta")
+top_terms <- gbv_FGDTK_topics %>%
   group_by(topic) %>%
   top_n(10, beta) %>%
   ungroup() %>%

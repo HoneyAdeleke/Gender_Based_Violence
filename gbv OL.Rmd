@@ -39,7 +39,8 @@ inspect(corpus1[1:10])
 
 
 ```{r Cleaning_the_text, echo=T, warning=FALSE}
-corpus1 <- tm_map(corpus1, stemDocument)  # Stemming the textcorpus2=tm_map(corpus1, tolower) # To make bring document to lower case
+corpus1 <- tm_map(corpus1, stemDocument)  # Stemming the text
+corpus2=tm_map(corpus1, tolower) # To make bring document to lower case
 corpus3=tm_map(corpus2, removePunctuation) # To remove punctuation
 corpus4=tm_map(corpus3, removeNumbers) # remove number
 cleanset=tm_map(corpus4, removeWords, stopwords('english')) # To remove English words that are common and will not add much values
@@ -91,9 +92,9 @@ wordcloud2(gbv_OL_bar3,
 ```
 
 ```{r Sentiment_Analysis, echo=T}
-library(syuzhet)
-library(dplyr)
 # Read file
+
+get_sentiments("nrc")
 gbv_OL_sentiment <- get_nrc_sentiment(corpus)
 write.csv(gbv_OL_sentiment, "gbv_OL_sentiment.csv")
 head(gbv_OL_sentiment)
